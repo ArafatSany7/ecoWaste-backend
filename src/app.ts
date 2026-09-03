@@ -6,7 +6,6 @@ import config from "./app/config";
 
 const app: Application = express();
 
-// Security and middleware
 app.use(helmet());
 app.use(
   cors({
@@ -17,17 +16,15 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  limit: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes).
-  standardHeaders: "draft-7", // draft-6: `RateLimit-*` headers; draft-7: combined `RateLimit` header
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers.
+  windowMs: 15 * 60 * 1000,
+  limit: 100,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
   message: "Too many requests from this IP, please try again later.",
 });
 app.use(limiter);
 
-// Health check endpoint
 app.get("/", (req: Request, res: Response) => {
   res.status(200).json({
     success: true,
@@ -35,7 +32,6 @@ app.get("/", (req: Request, res: Response) => {
   });
 });
 
-// Not Found Handler (Basic for now, will be expanded in Phase 10)
 app.use((req: Request, res: Response) => {
   res.status(404).json({
     success: false,
