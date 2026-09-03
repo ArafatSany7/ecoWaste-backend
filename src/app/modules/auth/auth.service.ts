@@ -79,8 +79,13 @@ const loginUser = async (payload: any) => {
     expiresIn: config.jwt.access_expires_in,
   });
 
+  const refreshToken = jwt.sign(jwtPayload, config.jwt.refresh_secret as string, {
+    expiresIn: config.jwt.refresh_expires_in,
+  });
+
   return {
     accessToken,
+    refreshToken,
     user: {
       id: user.id,
       email: user.email,
@@ -89,7 +94,37 @@ const loginUser = async (payload: any) => {
   };
 };
 
+const refreshToken = async (token: string) => {
+  const decoded = jwt.verify(token, config.jwt.refresh_secret as string) as jwt.JwtPayload;
+
+  const user = await prisma.user.findUnique({
+    where: { id: decoded.userId },
+  });
+
+  if (!user) {
+    throw new Error("Invalid credentials");
+  }
+
+  if (user.isDeleted || user.status === "BLOCKED") {
+    throw new Error("This user account is blocked or deleted");
+  }
+
+  const jwtPayload = {
+    userId: user.id,
+    role: user.role,
+  };
+
+  const accessToken = jwt.sign(jwtPayload, config.jwt.access_secret as string, {
+    expiresIn: config.jwt.access_expires_in,
+  });
+
+  return {
+    accessToken,
+  };
+};
+
 export const AuthService = {
   registerUser,
   loginUser,
+  refreshToken,
 };

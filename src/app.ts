@@ -1,4 +1,5 @@
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import express, { type Application, type Request, type Response } from "express";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
@@ -16,6 +17,7 @@ app.use(
   })
 );
 app.use(express.json());
+app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 
 const limiter = rateLimit({
