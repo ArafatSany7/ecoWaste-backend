@@ -68,3 +68,15 @@ model ServiceZone {
 
   @@map("service_zones")
 }
+
+model WasteCategory {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  type        String
+  description String?
+  isDeleted   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("waste_categories")
+}
