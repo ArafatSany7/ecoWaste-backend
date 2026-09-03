@@ -2,7 +2,9 @@ import cors from "cors";
 import express, { type Application, type Request, type Response } from "express";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
+import router from "./app/routes";
 import config from "./app/config";
+import globalErrorHandler from "./app/middlewares/globalErrorHandler";
 
 const app: Application = express();
 
@@ -25,6 +27,8 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
+app.use("/api/v1", router);
+
 app.get("/", (req: Request, res: Response) => {
   res.status(200).json({
     success: true,
@@ -38,5 +42,7 @@ app.use((req: Request, res: Response) => {
     message: "API Not Found",
   });
 });
+
+app.use(globalErrorHandler);
 
 export default app;
