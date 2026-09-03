@@ -6,11 +6,65 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Role {
+  CUSTOMER
+  COLLECTOR
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+}
+
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id               String            @id @default(uuid())
+  email            String            @unique
+  passwordHash     String
+  role             Role              @default(CUSTOMER)
+  status           UserStatus        @default(ACTIVE)
+  isDeleted        Boolean           @default(false)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  customerProfile  CustomerProfile?
+  collectorProfile CollectorProfile?
 
   @@map("users")
+}
+
+model CustomerProfile {
+  id             String @id @default(uuid())
+  userId         String @unique
+  firstName      String
+  lastName       String
+  phone          String
+  defaultAddress String
+  user           User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("customer_profiles")
+}
+
+model CollectorProfile {
+  id          String       @id @default(uuid())
+  userId      String       @unique
+  firstName   String
+  lastName    String
+  phone       String
+  isAvailable Boolean      @default(true)
+  zoneId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  serviceZone ServiceZone  @relation(fields: [zoneId], references: [id])
+
+  @@map("collector_profiles")
+}
+
+// Basic stub for ServiceZone, will be expanded in Phase 11
+model ServiceZone {
+  id               String             @id @default(uuid())
+  name             String             @unique
+  city             String
+  isDeleted        Boolean            @default(false)
+  collectorProfiles CollectorProfile[]
+
+  @@map("service_zones")
 }
