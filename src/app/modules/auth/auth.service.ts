@@ -23,11 +23,11 @@ const registerUser = async (payload: any) => {
       data: {
         email,
         passwordHash: hashedPassword,
-        role: "CUSTOMER",
+        role: "CITIZEN",
       },
     });
 
-    const profile = await tx.customerProfile.create({
+    const profile = await tx.citizenProfile.create({
       data: {
         userId: user.id,
         firstName,

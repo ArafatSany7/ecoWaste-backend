@@ -7,7 +7,7 @@ datasource db {
 }
 
 enum Role {
-  CUSTOMER
+  CITIZEN
   COLLECTOR
   ADMIN
 }
@@ -21,18 +21,18 @@ model User {
   id               String            @id @default(uuid())
   email            String            @unique
   passwordHash     String
-  role             Role              @default(CUSTOMER)
+  role             Role              @default(CITIZEN)
   status           UserStatus        @default(ACTIVE)
   isDeleted        Boolean           @default(false)
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
-  customerProfile  CustomerProfile?
+  citizenProfile   CitizenProfile?
   collectorProfile CollectorProfile?
 
   @@map("users")
 }
 
-model CustomerProfile {
+model CitizenProfile {
   id             String @id @default(uuid())
   userId         String @unique
   firstName      String
@@ -41,7 +41,7 @@ model CustomerProfile {
   defaultAddress String
   user           User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("customer_profiles")
+  @@map("citizen_profiles")
 }
 
 model CollectorProfile {
