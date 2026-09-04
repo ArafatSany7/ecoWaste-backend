@@ -19,7 +19,14 @@ enum UserStatus {
 
 enum RequestStatus {
   PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
   ASSIGNED
+  SCHEDULED
+  COLLECTOR_ARRIVED
+  IN_PROGRESS
+  COMPLETED
   COLLECTED
 }
 
@@ -34,6 +41,7 @@ model User {
   updatedAt        DateTime          @updatedAt
   citizenProfile   CitizenProfile?
   collectorProfile CollectorProfile?
+  auditLogs        AuditLog[]
 
   @@map("users")
 }
@@ -107,4 +115,20 @@ model WasteRequest {
   zone        ServiceZone    @relation(fields: [zoneId], references: [id])
 
   @@map("waste_requests")
+}
+
+model AuditLog {
+  id            String   @id @default(uuid())
+  actorId       String
+  action        String
+  entity        String
+  entityId      String
+  previousValue Json?
+  newValue      Json?
+  ipAddress     String?
+  createdAt     DateTime @default(now())
+
+  actor         User     @relation(fields: [actorId], references: [id])
+
+  @@map("audit_logs")
 }
