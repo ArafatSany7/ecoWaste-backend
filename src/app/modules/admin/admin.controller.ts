@@ -33,7 +33,35 @@ const rejectWasteRequest = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const createCollector = catchAsync(async (req: Request, res: Response) => {
+  const result = await AdminService.createCollector(req.body);
+
+  sendResponse(res, {
+    statusCode: 201,
+    success: true,
+    message: "Collector created successfully",
+    data: result,
+  });
+});
+
+const assignCollector = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const adminId = req.user.userId;
+  const ipAddress = req.ip;
+
+  const result = await AdminService.assignCollector(id, req.body, adminId, ipAddress);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Collector assigned successfully",
+    data: result,
+  });
+});
+
 export const AdminController = {
   approveWasteRequest,
   rejectWasteRequest,
+  createCollector,
+  assignCollector,
 };

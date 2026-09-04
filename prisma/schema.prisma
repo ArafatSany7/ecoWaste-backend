@@ -69,6 +69,7 @@ model CollectorProfile {
   zoneId      String
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   serviceZone ServiceZone  @relation(fields: [zoneId], references: [id])
+  assignedRequests WasteRequest[]
 
   @@map("collector_profiles")
 }
@@ -113,6 +114,9 @@ model WasteRequest {
   citizen     CitizenProfile @relation(fields: [citizenId], references: [userId])
   category    WasteCategory  @relation(fields: [categoryId], references: [id])
   zone        ServiceZone    @relation(fields: [zoneId], references: [id])
+  
+  assignedCollectorId String?
+  assignedCollector   CollectorProfile? @relation(fields: [assignedCollectorId], references: [userId])
 
   @@map("waste_requests")
 }

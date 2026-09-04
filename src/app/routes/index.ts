@@ -4,6 +4,7 @@ import { ZoneRoutes } from "../modules/zone/zone.route";
 import { WasteCategoryRoutes } from "../modules/wasteCategory/wasteCategory.route";
 import { WasteRequestRoutes } from "../modules/wasteRequest/wasteRequest.route";
 import { AdminRoutes } from "../modules/admin/admin.route";
+import { CollectorRoutes } from "../modules/collector/collector.route";
 
 const router = express.Router();
 
@@ -27,6 +28,10 @@ const moduleRoutes = [
   {
     path: "/admin",
     route: AdminRoutes,
+  },
+  {
+    path: "/collectors",
+    route: CollectorRoutes,
   },
 ];
 
