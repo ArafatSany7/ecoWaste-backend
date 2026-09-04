@@ -17,6 +17,12 @@ enum UserStatus {
   BLOCKED
 }
 
+enum RequestStatus {
+  PENDING
+  ASSIGNED
+  COLLECTED
+}
+
 model User {
   id               String            @id @default(uuid())
   email            String            @unique
@@ -39,7 +45,8 @@ model CitizenProfile {
   lastName       String
   phone          String
   defaultAddress String
-  user           User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wasteRequests  WasteRequest[]
 
   @@map("citizen_profiles")
 }
@@ -65,6 +72,7 @@ model ServiceZone {
   city             String
   isDeleted        Boolean            @default(false)
   collectorProfiles CollectorProfile[]
+  wasteRequests    WasteRequest[]
 
   @@map("service_zones")
 }
@@ -77,6 +85,26 @@ model WasteCategory {
   isDeleted   Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  wasteRequests WasteRequest[]
 
   @@map("waste_categories")
+}
+
+model WasteRequest {
+  id          String        @id @default(uuid())
+  citizenId   String
+  categoryId  String
+  zoneId      String
+  address     String
+  weight      Float?
+  status      RequestStatus @default(PENDING)
+  isDeleted   Boolean       @default(false)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  citizen     CitizenProfile @relation(fields: [citizenId], references: [userId])
+  category    WasteCategory  @relation(fields: [categoryId], references: [id])
+  zone        ServiceZone    @relation(fields: [zoneId], references: [id])
+
+  @@map("waste_requests")
 }

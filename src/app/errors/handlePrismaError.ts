@@ -1,12 +1,14 @@
 import { Prisma } from "@prisma/client";
 
 const handlePrismaError = (err: Prisma.PrismaClientKnownRequestError | Prisma.PrismaClientValidationError) => {
+  const cleanMessage = err.message.split("\n").filter(Boolean).pop()?.trim() || "Database Error";
+
   let statusCode = 400;
   let message = "Database Error";
   let errorSources = [
     {
       path: "",
-      message: err.message,
+      message: cleanMessage,
     },
   ];
 
@@ -27,6 +29,15 @@ const handlePrismaError = (err: Prisma.PrismaClientKnownRequestError | Prisma.Pr
         {
           path: "",
           message: "Record not found",
+        },
+      ];
+    } else if (err.code === "P2003") {
+      statusCode = 400;
+      message = "Invalid Reference";
+      errorSources = [
+        {
+          path: "",
+          message: `The referenced record does not exist (${err.meta?.field_name})`,
         },
       ];
     }

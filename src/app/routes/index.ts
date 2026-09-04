@@ -2,6 +2,7 @@ import express from "express";
 import { AuthRoutes } from "../modules/auth/auth.route";
 import { ZoneRoutes } from "../modules/zone/zone.route";
 import { WasteCategoryRoutes } from "../modules/wasteCategory/wasteCategory.route";
+import { WasteRequestRoutes } from "../modules/wasteRequest/wasteRequest.route";
 
 const router = express.Router();
 
@@ -17,6 +18,10 @@ const moduleRoutes = [
   {
     path: "/waste-categories",
     route: WasteCategoryRoutes,
+  },
+  {
+    path: "/waste-requests",
+    route: WasteRequestRoutes,
   },
 ];
 
