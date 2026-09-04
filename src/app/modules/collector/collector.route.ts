@@ -17,4 +17,6 @@ router.patch(
   CollectorController.toggleAvailability
 );
 
+router.get("/me/jobs", auth("COLLECTOR"), CollectorController.getMyJobs);
+
 export const CollectorRoutes = router;

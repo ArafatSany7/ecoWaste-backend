@@ -39,8 +39,22 @@ const toggleAvailability = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getMyJobs = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user.userId;
+  const result = await CollectorService.getMyJobs(userId, req.query);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Jobs retrieved successfully",
+    data: result.data,
+    meta: result.meta,
+  });
+});
+
 export const CollectorController = {
   getAllCollectors,
   getCollectorById,
   toggleAvailability,
+  getMyJobs,
 };

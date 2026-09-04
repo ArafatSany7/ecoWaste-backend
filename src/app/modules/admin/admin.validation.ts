@@ -6,6 +6,14 @@ const assignCollectorSchema = z.object({
   }),
 });
 
+const scheduleWasteRequestSchema = z.object({
+  body: z.object({
+    scheduledDate: z.string({ required_error: "scheduledDate is required" }),
+    timeWindow: z.string({ required_error: "timeWindow is required" }),
+  }),
+});
+
 export const AdminValidation = {
   assignCollectorSchema,
+  scheduleWasteRequestSchema,
 };

@@ -180,9 +180,59 @@ const assignCollector = async (requestId: string, payload: { collectorId: string
   return result;
 };
 
+const scheduleWasteRequest = async (requestId: string, payload: { scheduledDate: string, timeWindow: string }, adminId: string, ipAddress?: string) => {
+  const { scheduledDate, timeWindow } = payload;
+
+  const request = await prisma.wasteRequest.findUnique({
+    where: { id: requestId },
+  });
+
+  if (!request) {
+    throw new AppError(404, "Waste Request not found");
+  }
+
+  if (request.status !== "ASSIGNED") {
+    throw new AppError(400, "Only ASSIGNED requests can be scheduled");
+  }
+
+  const result = await prisma.$transaction(async (tx) => {
+    const updatedRequest = await tx.wasteRequest.update({
+      where: { id: requestId },
+      data: {
+        status: "SCHEDULED",
+      },
+    });
+
+    const schedule = await tx.collectionSchedule.create({
+      data: {
+        requestId,
+        scheduledDate: new Date(scheduledDate),
+        timeWindow,
+      },
+    });
+
+    await tx.auditLog.create({
+      data: {
+        actorId: adminId,
+        action: "SCHEDULE_REQUEST",
+        entity: "WasteRequest",
+        entityId: requestId,
+        previousValue: { status: "ASSIGNED" },
+        newValue: { status: "SCHEDULED", scheduleId: schedule.id },
+        ipAddress: ipAddress || null,
+      },
+    });
+
+    return { request: updatedRequest, schedule };
+  });
+
+  return result;
+};
+
 export const AdminService = {
   approveWasteRequest,
   rejectWasteRequest,
   createCollector,
   assignCollector,
+  scheduleWasteRequest,
 };

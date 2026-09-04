@@ -117,6 +117,7 @@ model WasteRequest {
   
   assignedCollectorId String?
   assignedCollector   CollectorProfile? @relation(fields: [assignedCollectorId], references: [userId])
+  collectionSchedule  CollectionSchedule?
 
   @@map("waste_requests")
 }
@@ -135,4 +136,17 @@ model AuditLog {
   actor         User     @relation(fields: [actorId], references: [id])
 
   @@map("audit_logs")
+}
+
+model CollectionSchedule {
+  id            String       @id @default(uuid())
+  requestId     String       @unique
+  scheduledDate DateTime
+  timeWindow    String
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  request       WasteRequest @relation(fields: [requestId], references: [id])
+
+  @@map("collection_schedules")
 }

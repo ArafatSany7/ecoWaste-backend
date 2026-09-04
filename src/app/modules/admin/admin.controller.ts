@@ -59,9 +59,25 @@ const assignCollector = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const scheduleWasteRequest = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const adminId = req.user.userId;
+  const ipAddress = req.ip;
+
+  const result = await AdminService.scheduleWasteRequest(id, req.body, adminId, ipAddress);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Waste request scheduled successfully",
+    data: result,
+  });
+});
+
 export const AdminController = {
   approveWasteRequest,
   rejectWasteRequest,
   createCollector,
   assignCollector,
+  scheduleWasteRequest,
 };

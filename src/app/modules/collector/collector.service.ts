@@ -55,8 +55,55 @@ const toggleAvailability = async (userId: string, isAvailable: boolean) => {
   return result;
 };
 
+const getMyJobs = async (userId: string, query: Record<string, unknown>) => {
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  const where: any = {
+    assignedCollectorId: userId,
+  };
+
+  if (query.status) {
+    where.status = query.status;
+  }
+
+  if (query.date) {
+    // If a date is provided, filter by CollectionSchedule's scheduledDate
+    where.collectionSchedule = {
+      scheduledDate: {
+        gte: new Date(`${query.date}T00:00:00.000Z`),
+        lte: new Date(`${query.date}T23:59:59.999Z`),
+      },
+    };
+  }
+
+  const result = await prisma.wasteRequest.findMany({
+    where,
+    skip,
+    take: limit,
+    orderBy: {
+      createdAt: "desc",
+    },
+    include: {
+      citizen: true,
+      category: true,
+      zone: true,
+      collectionSchedule: true,
+    },
+  });
+
+  const total = await prisma.wasteRequest.count({ where });
+
+  return {
+    meta: { page, limit, total },
+    data: result,
+  };
+};
+
 export const CollectorService = {
   getAllCollectors,
   getCollectorById,
   toggleAvailability,
+  getMyJobs,
 };

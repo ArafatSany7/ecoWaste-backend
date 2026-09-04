@@ -33,4 +33,11 @@ router.post(
   AdminController.assignCollector
 );
 
+router.post(
+  "/requests/:id/schedule",
+  auth("ADMIN"),
+  validateRequest(AdminValidation.scheduleWasteRequestSchema),
+  AdminController.scheduleWasteRequest
+);
+
 export const AdminRoutes = router;
