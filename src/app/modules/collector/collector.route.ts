@@ -19,4 +19,23 @@ router.patch(
 
 router.get("/me/jobs", auth("COLLECTOR"), CollectorController.getMyJobs);
 
+router.patch(
+  "/requests/:id/arrive",
+  auth("COLLECTOR"),
+  CollectorController.arriveAtLocation
+);
+
+router.patch(
+  "/requests/:id/start",
+  auth("COLLECTOR"),
+  CollectorController.startCollection
+);
+
+router.post(
+  "/requests/:id/complete",
+  auth("COLLECTOR"),
+  validateRequest(CollectorValidation.completeCollectionSchema),
+  CollectorController.completeCollection
+);
+
 export const CollectorRoutes = router;

@@ -74,7 +74,6 @@ model CollectorProfile {
   @@map("collector_profiles")
 }
 
-// Basic stub for ServiceZone, will be expanded in Phase 11
 model ServiceZone {
   id               String             @id @default(uuid())
   name             String             @unique
@@ -118,6 +117,7 @@ model WasteRequest {
   assignedCollectorId String?
   assignedCollector   CollectorProfile? @relation(fields: [assignedCollectorId], references: [userId])
   collectionSchedule  CollectionSchedule?
+  serviceReport       ServiceReport?
 
   @@map("waste_requests")
 }
@@ -149,4 +149,17 @@ model CollectionSchedule {
   request       WasteRequest @relation(fields: [requestId], references: [id])
 
   @@map("collection_schedules")
+}
+
+model ServiceReport {
+  id            String       @id @default(uuid())
+  requestId     String       @unique
+  actualWeight  Float
+  notes         String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  request       WasteRequest @relation(fields: [requestId], references: [id])
+
+  @@map("service_reports")
 }

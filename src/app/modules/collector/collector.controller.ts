@@ -52,9 +52,57 @@ const getMyJobs = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const arriveAtLocation = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const collectorId = req.user.userId;
+  const ipAddress = req.ip;
+
+  const result = await CollectorService.arriveAtLocation(id, collectorId, ipAddress);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Collector arrived at location",
+    data: result,
+  });
+});
+
+const startCollection = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const collectorId = req.user.userId;
+  const ipAddress = req.ip;
+
+  const result = await CollectorService.startCollection(id, collectorId, ipAddress);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Collection started successfully",
+    data: result,
+  });
+});
+
+const completeCollection = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const collectorId = req.user.userId;
+  const ipAddress = req.ip;
+
+  const result = await CollectorService.completeCollection(id, collectorId, req.body, ipAddress);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Collection completed and Service Report generated successfully",
+    data: result,
+  });
+});
+
 export const CollectorController = {
   getAllCollectors,
   getCollectorById,
   toggleAvailability,
   getMyJobs,
+  arriveAtLocation,
+  startCollection,
+  completeCollection,
 };
