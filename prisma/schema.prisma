@@ -60,6 +60,8 @@ model User {
   auditLogs        AuditLog[]
   invoices         Invoice[]
 
+  feedbacks         Feedback[]
+
   @@map("users")
 }
 
@@ -136,6 +138,7 @@ model WasteRequest {
   collectionSchedule  CollectionSchedule?
   serviceReport       ServiceReport?
   invoice             Invoice?
+  feedback            Feedback?
 
   @@map("waste_requests")
 }
@@ -212,4 +215,19 @@ model Payment {
   invoice       Invoice           @relation(fields: [invoiceId], references: [id])
 
   @@map("payments")
+}
+
+model Feedback {
+  id          String       @id @default(uuid())
+  citizenId   String
+  requestId   String       @unique
+  rating      Int
+  comment     String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  citizen     User         @relation(fields: [citizenId], references: [id])
+  request     WasteRequest @relation(fields: [requestId], references: [id])
+
+  @@map("feedbacks")
 }
