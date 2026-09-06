@@ -192,6 +192,9 @@ const completeCollection = async (requestId: string, collectorId: string, payloa
 
   const request = await prisma.wasteRequest.findUnique({
     where: { id: requestId },
+    include: {
+      category: true,
+    }
   });
 
   if (!request) {
@@ -225,7 +228,21 @@ const completeCollection = async (requestId: string, collectorId: string, payloa
       },
     });
 
-    // 3. Create the AuditLog
+    // 3. Generate the Invoice
+    const invoiceAmount = request.category.baseFee * actualWeight;
+    const dueDate = new Date();
+    dueDate.setDate(dueDate.getDate() + 7); // Due in 7 days
+
+    const invoice = await tx.invoice.create({
+      data: {
+        requestId,
+        citizenId: request.citizenId,
+        amount: invoiceAmount,
+        dueDate,
+      }
+    });
+
+    // 4. Create the AuditLog
     await tx.auditLog.create({
       data: {
         actorId: collectorId,
@@ -233,12 +250,12 @@ const completeCollection = async (requestId: string, collectorId: string, payloa
         entity: "WasteRequest",
         entityId: requestId,
         previousValue: { status: "IN_PROGRESS" },
-        newValue: { status: "COMPLETED", serviceReportId: serviceReport.id },
+        newValue: { status: "COMPLETED", serviceReportId: serviceReport.id, invoiceId: invoice.id },
         ipAddress: ipAddress || null,
       },
     });
 
-    return { request: updatedRequest, serviceReport };
+    return { request: updatedRequest, serviceReport, invoice };
   });
 
   return result;

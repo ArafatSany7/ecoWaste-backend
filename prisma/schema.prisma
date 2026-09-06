@@ -30,6 +30,22 @@ enum RequestStatus {
   COLLECTED
 }
 
+enum PaymentStatus {
+  PENDING
+  PAID
+  CANCELLED
+}
+
+enum PaymentProvider {
+  BKASH
+}
+
+enum TransactionStatus {
+  INITIATED
+  SUCCESS
+  FAILED
+}
+
 model User {
   id               String            @id @default(uuid())
   email            String            @unique
@@ -42,6 +58,7 @@ model User {
   citizenProfile   CitizenProfile?
   collectorProfile CollectorProfile?
   auditLogs        AuditLog[]
+  invoices         Invoice[]
 
   @@map("users")
 }
@@ -118,6 +135,7 @@ model WasteRequest {
   assignedCollector   CollectorProfile? @relation(fields: [assignedCollectorId], references: [userId])
   collectionSchedule  CollectionSchedule?
   serviceReport       ServiceReport?
+  invoice             Invoice?
 
   @@map("waste_requests")
 }
@@ -162,4 +180,36 @@ model ServiceReport {
   request       WasteRequest @relation(fields: [requestId], references: [id])
 
   @@map("service_reports")
+}
+
+model Invoice {
+  id          String       @id @default(uuid())
+  requestId   String       @unique
+  citizenId   String
+  amount      Float
+  status      PaymentStatus @default(PENDING)
+  dueDate     DateTime
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  request     WasteRequest @relation(fields: [requestId], references: [id])
+  citizen     User         @relation(fields: [citizenId], references: [id])
+  payment     Payment?
+
+  @@map("invoices")
+}
+
+model Payment {
+  id            String            @id @default(uuid())
+  invoiceId     String            @unique
+  amount        Float
+  transactionId String?           @unique
+  provider      PaymentProvider   @default(BKASH)
+  status        TransactionStatus @default(INITIATED)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  invoice       Invoice           @relation(fields: [invoiceId], references: [id])
+
+  @@map("payments")
 }

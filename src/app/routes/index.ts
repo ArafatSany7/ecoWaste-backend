@@ -5,6 +5,8 @@ import { WasteCategoryRoutes } from "../modules/wasteCategory/wasteCategory.rout
 import { WasteRequestRoutes } from "../modules/wasteRequest/wasteRequest.route";
 import { AdminRoutes } from "../modules/admin/admin.route";
 import { CollectorRoutes } from "../modules/collector/collector.route";
+import { InvoiceRoutes } from "../modules/invoice/invoice.route";
+import { PaymentRoutes } from "../modules/payment/payment.route";
 
 const router = express.Router();
 
@@ -33,6 +35,14 @@ const moduleRoutes = [
     path: "/collectors",
     route: CollectorRoutes,
   },
+  {
+    path: "/invoices",
+    route: InvoiceRoutes,
+  },
+  {
+    path: "/payments",
+    route: PaymentRoutes,
+  }
 ];
 
 moduleRoutes.forEach((route) => router.use(route.path, route.route));

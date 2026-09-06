@@ -9,9 +9,27 @@ export default {
   database_url: process.env.DATABASE_URL,
   jwt: {
     access_secret: process.env.JWT_ACCESS_SECRET,
-    refresh_secret: process.env.JWT_REFRESH_SECRET,
     access_expires_in: process.env.JWT_ACCESS_EXPIRES_IN,
+    refresh_secret: process.env.JWT_REFRESH_SECRET,
     refresh_expires_in: process.env.JWT_REFRESH_EXPIRES_IN,
+  },
+  redis: {
+    user: process.env.REDIS_USER,
+    password: process.env.REDIS_PASSWORD,
+    host: process.env.REDIS_HOST,
+    port: process.env.REDIS_PORT,
+  },
+  cloudinary: {
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  },
+  bkash: {
+    base_url: process.env.BKASH_BASE_URL,
+    username: process.env.BKASH_USERNAME,
+    password: process.env.BKASH_PASSWORD,
+    app_key: process.env.BKASH_APP_KEY,
+    app_secret: process.env.BKASH_APP_SECRET,
   },
   bcrypt_salt_rounds: process.env.BCRYPT_SALT_ROUNDS,
   frontend_url: process.env.FRONTEND_URL,
