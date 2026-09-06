@@ -75,11 +75,11 @@ const loginUser = async (payload: any) => {
     role: user.role,
   };
 
-  const accessToken = jwt.sign(jwtPayload, config.jwt.access_secret as string, {
+  const accessToken = jwt.sign(jwtPayload, config.jwt.access_secret as any, {
     expiresIn: config.jwt.access_expires_in,
   });
 
-  const refreshToken = jwt.sign(jwtPayload, config.jwt.refresh_secret as string, {
+  const refreshToken = jwt.sign(jwtPayload, config.jwt.refresh_secret as any, {
     expiresIn: config.jwt.refresh_expires_in,
   });
 
@@ -95,7 +95,7 @@ const loginUser = async (payload: any) => {
 };
 
 const refreshToken = async (token: string) => {
-  const decoded = jwt.verify(token, config.jwt.refresh_secret as string) as jwt.JwtPayload;
+  const decoded = jwt.verify(token, config.jwt.refresh_secret as any) as jwt.JwtPayload;
 
   const user = await prisma.user.findUnique({
     where: { id: decoded.userId },
@@ -114,7 +114,7 @@ const refreshToken = async (token: string) => {
     role: user.role,
   };
 
-  const accessToken = jwt.sign(jwtPayload, config.jwt.access_secret as string, {
+  const accessToken = jwt.sign(jwtPayload, config.jwt.access_secret as any, {
     expiresIn: config.jwt.access_expires_in,
   });
 

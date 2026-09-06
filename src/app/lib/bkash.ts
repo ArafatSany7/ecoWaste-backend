@@ -7,8 +7,8 @@ export const getBkashIdToken = async () => {
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
-      username: config.bkash.username as string,
-      password: config.bkash.password as string,
+      username: config.bkash.username as any,
+      password: config.bkash.password as any,
     },
     body: JSON.stringify({
       app_key: config.bkash.app_key,
@@ -32,7 +32,7 @@ export const createBkashPayment = async (invoiceId: string, amount: number) => {
       "Content-Type": "application/json",
       Accept: "application/json",
       Authorization: idToken,
-      "X-APP-Key": config.bkash.app_key as string,
+      "X-APP-Key": config.bkash.app_key as any,
     },
     body: JSON.stringify({
       mode: "0011",
@@ -61,7 +61,7 @@ export const executeBkashPayment = async (paymentID: string) => {
       "Content-Type": "application/json",
       Accept: "application/json",
       Authorization: idToken,
-      "X-APP-Key": config.bkash.app_key as string,
+      "X-APP-Key": config.bkash.app_key as any,
     },
     body: JSON.stringify({
       paymentID,

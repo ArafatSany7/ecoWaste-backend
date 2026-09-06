@@ -67,7 +67,7 @@ const verifyPayment = async (paymentId: string, citizenId: string, ipAddress?: s
     throw new AppError(400, `Payment is already ${payment.status}`);
   }
 
-  const bkashVerification = await executeBkashPayment(payment.transactionId as string);
+  const bkashVerification = await executeBkashPayment(payment.transactionId as any);
 
   if (bkashVerification.statusCode !== "0000" || bkashVerification.transactionStatus !== "Completed") {
     await prisma.payment.update({

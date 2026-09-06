@@ -19,7 +19,7 @@ const updateAvailabilitySchema = z.object({
 
 const completeCollectionSchema = z.object({
   body: z.object({
-    actualWeight: z.number({ required_error: "actualWeight is required" }).positive(),
+    actualWeight: z.number({ message: "actualWeight is required" }).positive(),
     notes: z.string().optional(),
   }),
 });

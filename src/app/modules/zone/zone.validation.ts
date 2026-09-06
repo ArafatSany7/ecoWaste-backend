@@ -2,8 +2,8 @@ import { z } from "zod";
 
 const createZoneSchema = z.object({
   body: z.object({
-    name: z.string({ required_error: "Zone name is required" }),
-    city: z.string({ required_error: "City is required" }),
+    name: z.string({ message: "Zone name is required" }),
+    city: z.string({ message: "City is required" }),
   }),
 });
 

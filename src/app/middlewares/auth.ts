@@ -21,7 +21,7 @@ const auth = (...requiredRoles: string[]) => {
 
     const token = authHeader.split(" ")[1];
 
-    const decoded = jwt.verify(token, config.jwt.access_secret as string) as JwtPayload;
+    const decoded = jwt.verify(token, config.jwt.access_secret as any) as JwtPayload;
     const { userId, role } = decoded;
 
     const user = await prisma.user.findUnique({

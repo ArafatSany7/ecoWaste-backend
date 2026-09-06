@@ -2,13 +2,13 @@ import { z } from "zod";
 
 const initiatePaymentSchema = z.object({
   body: z.object({
-    invoiceId: z.string({ required_error: "invoiceId is required" }),
+    invoiceId: z.string({ message: "invoiceId is required" }),
   }),
 });
 
 const verifyPaymentSchema = z.object({
   body: z.object({
-    paymentId: z.string({ required_error: "paymentId is required" }),
+    paymentId: z.string({ message: "paymentId is required" }),
   }),
 });
 

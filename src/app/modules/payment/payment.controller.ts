@@ -46,8 +46,8 @@ const bkashCallback = catchAsync(async (req: Request, res: Response) => {
   }
 
   const result = await PaymentService.bkashCallback(
-    paymentID as string,
-    status as string,
+    paymentID as unknown as any,
+    status as unknown as any,
     ipAddress
   );
 

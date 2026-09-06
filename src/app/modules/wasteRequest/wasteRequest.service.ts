@@ -21,8 +21,8 @@ const calculatePagination = (query: Record<string, unknown>) => {
   const page = Number(query.page) || 1;
   const limit = Number(query.limit) || 10;
   const skip = (page - 1) * limit;
-  const sortBy = (query.sortBy as string) || "createdAt";
-  const sortOrder = (query.sortOrder as string) || "desc";
+  const sortBy = (query.sortBy as any) || "createdAt";
+  const sortOrder = (query.sortOrder as any) || "desc";
 
   return { page, limit, skip, sortBy, sortOrder };
 };
@@ -38,10 +38,10 @@ const buildQueryConditions = (query: Record<string, unknown>, extraConditions: P
   if (searchTerm) {
     andConditions.push({
       OR: [
-        { address: { contains: searchTerm as string, mode: "insensitive" } },
-        { citizen: { firstName: { contains: searchTerm as string, mode: "insensitive" } } },
-        { citizen: { lastName: { contains: searchTerm as string, mode: "insensitive" } } },
-        { citizen: { phone: { contains: searchTerm as string, mode: "insensitive" } } },
+        { address: { contains: searchTerm as any, mode: "insensitive" } },
+        { citizen: { firstName: { contains: searchTerm as any, mode: "insensitive" } } },
+        { citizen: { lastName: { contains: searchTerm as any, mode: "insensitive" } } },
+        { citizen: { phone: { contains: searchTerm as any, mode: "insensitive" } } },
       ],
     });
   }
@@ -51,11 +51,11 @@ const buildQueryConditions = (query: Record<string, unknown>, extraConditions: P
   }
 
   if (categoryId) {
-    andConditions.push({ categoryId: categoryId as string });
+    andConditions.push({ categoryId: categoryId as any });
   }
 
   if (zoneId) {
-    andConditions.push({ zoneId: zoneId as string });
+    andConditions.push({ zoneId: zoneId as any });
   }
 
   return andConditions.length > 0 ? { AND: andConditions } : {};

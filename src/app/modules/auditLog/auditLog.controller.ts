@@ -7,16 +7,16 @@ const getAllAuditLogs = catchAsync(async (req: Request, res: Response) => {
   const { page, limit, actorId, action, entity, entityId, startDate, endDate } = req.query;
 
   const filters = {
-    actorId: actorId as string,
-    action: action as string,
-    entity: entity as string,
-    entityId: entityId as string,
-    startDate: startDate as string,
-    endDate: endDate as string,
+    actorId: actorId as unknown as any,
+    action: action as unknown as any,
+    entity: entity as unknown as any,
+    entityId: entityId as unknown as any,
+    startDate: startDate as unknown as any,
+    endDate: endDate as unknown as any,
   };
 
-  const parsedPage = page ? parseInt(page as string) : 1;
-  const parsedLimit = limit ? parseInt(limit as string) : 10;
+  const parsedPage = page ? parseInt(page as unknown as any) : 1;
+  const parsedLimit = limit ? parseInt(limit as unknown as any) : 10;
 
   const result = await AuditLogService.getAllAuditLogs(filters, parsedPage, parsedLimit);
 
