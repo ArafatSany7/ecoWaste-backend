@@ -19,7 +19,6 @@ const initiatePayment = async (invoiceId: string, citizenId: string) => {
     throw new AppError(400, "Invoice is already paid or cancelled");
   }
 
-  // Create payment record
   const payment = await prisma.payment.create({
     data: {
       invoiceId,
@@ -29,14 +28,12 @@ const initiatePayment = async (invoiceId: string, citizenId: string) => {
     },
   });
 
-  // Real bKash gateway implementation
   const bkashResponse = await createBkashPayment(invoiceId, invoice.amount);
 
-  // Update payment with bkash response data
   await prisma.payment.update({
     where: { id: payment.id },
     data: {
-      transactionId: bkashResponse.paymentID, // Using paymentID to track initially
+      transactionId: bkashResponse.paymentID,
     },
   });
 
@@ -61,11 +58,9 @@ const verifyPayment = async (paymentId: string, citizenId: string, ipAddress?: s
     throw new AppError(400, `Payment is already ${payment.status}`);
   }
 
-  // Real bKash Execute Payment
   const bkashVerification = await executeBkashPayment(payment.transactionId as string);
 
   if (bkashVerification.statusCode !== "0000" || bkashVerification.transactionStatus !== "Completed") {
-    // Optionally update payment status to FAILED here
     await prisma.payment.update({
       where: { id: paymentId },
       data: { status: "FAILED" },
@@ -76,7 +71,7 @@ const verifyPayment = async (paymentId: string, citizenId: string, ipAddress?: s
   const transactionId = bkashVerification.trxID;
 
   const result = await prisma.$transaction(async (tx) => {
-    // 1. Update Payment Status
+
     const updatedPayment = await tx.payment.update({
       where: { id: paymentId },
       data: {
@@ -85,13 +80,11 @@ const verifyPayment = async (paymentId: string, citizenId: string, ipAddress?: s
       },
     });
 
-    // 2. Update Invoice Status
     await tx.invoice.update({
       where: { id: payment.invoiceId },
       data: { status: "PAID" },
     });
 
-    // 3. Create AuditLog
     await tx.auditLog.create({
       data: {
         actorId: citizenId,

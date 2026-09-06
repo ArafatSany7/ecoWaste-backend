@@ -1,5 +1,5 @@
 import express from "express";
-import { auth } from "../../middlewares/auth";
+import auth from "../../middlewares/auth";
 import { PaymentController } from "./payment.controller";
 import validateRequest from "../../middlewares/validateRequest";
 import { PaymentValidation } from "./payment.validation";
