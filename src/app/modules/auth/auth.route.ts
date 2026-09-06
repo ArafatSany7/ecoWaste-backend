@@ -20,4 +20,13 @@ router.post(
 router.post("/refresh-token", AuthController.refreshToken);
 router.post("/logout", AuthController.logoutUser);
 
+router.get("/google/initiate", AuthController.initiateGoogleLogin);
+router.get("/google/callback", AuthController.googleCallback);
+
+router.post(
+  "/google-login",
+  validateRequest(AuthValidation.googleLoginValidationSchema),
+  AuthController.loginWithGoogleIdToken
+);
+
 export const AuthRoutes = router;
