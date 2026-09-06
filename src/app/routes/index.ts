@@ -8,6 +8,7 @@ import { CollectorRoutes } from "../modules/collector/collector.route";
 import { InvoiceRoutes } from "../modules/invoice/invoice.route";
 import { PaymentRoutes } from "../modules/payment/payment.route";
 import { FeedbackRoutes } from "../modules/feedback/feedback.route";
+import { AuditLogRoutes } from "../modules/auditLog/auditLog.route";
 
 const router = express.Router();
 
@@ -47,6 +48,10 @@ const moduleRoutes = [
   {
     path: "/feedbacks",
     route: FeedbackRoutes,
+  },
+  {
+    path: "/audit-logs",
+    route: AuditLogRoutes,
   },
 ];
 
