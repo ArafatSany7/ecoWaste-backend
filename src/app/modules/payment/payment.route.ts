@@ -20,4 +20,7 @@ router.post(
   PaymentController.verifyPayment
 );
 
+
+router.get("/callback", PaymentController.bkashCallback);
+
 export const PaymentRoutes = router;

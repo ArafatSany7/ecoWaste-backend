@@ -229,7 +229,9 @@ const completeCollection = async (requestId: string, collectorId: string, payloa
     });
 
     // 3. Generate the Invoice
-    const invoiceAmount = request.category.baseFee * actualWeight;
+    // Fallback to 100 if baseFee doesn't exist on the category schema yet
+    const baseFee = (request.category as any).baseFee || 100;
+    const invoiceAmount = baseFee * actualWeight;
     const dueDate = new Date();
     dueDate.setDate(dueDate.getDate() + 7); // Due in 7 days
 

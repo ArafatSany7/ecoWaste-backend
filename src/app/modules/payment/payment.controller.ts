@@ -32,7 +32,46 @@ const verifyPayment = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const bkashCallback = catchAsync(async (req: Request, res: Response) => {
+  const { paymentID, status } = req.query;
+  const ipAddress = req.ip;
+
+  if (!paymentID || !status) {
+    return res.send(`
+      <div style="font-family: sans-serif; text-align: center; margin-top: 50px;">
+        <h1 style="color: red;">Invalid Payment Request</h1>
+        <p>You can close this window.</p>
+      </div>
+    `);
+  }
+
+  const result = await PaymentService.bkashCallback(
+    paymentID as string,
+    status as string,
+    ipAddress
+  );
+
+  if (result.success) {
+    res.send(`
+      <div style="font-family: sans-serif; text-align: center; margin-top: 50px;">
+        <h1 style="color: green;">Payment Successful!</h1>
+        <p>Your invoice has been marked as PAID.</p>
+        <p>You can close this window.</p>
+      </div>
+    `);
+  } else {
+    res.send(`
+      <div style="font-family: sans-serif; text-align: center; margin-top: 50px;">
+        <h1 style="color: red;">Payment Failed or Cancelled!</h1>
+        <p>Please try again from the app.</p>
+        <p>You can close this window.</p>
+      </div>
+    `);
+  }
+});
+
 export const PaymentController = {
   initiatePayment,
   verifyPayment,
+  bkashCallback,
 };

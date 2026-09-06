@@ -1,4 +1,5 @@
 import prisma from "../../lib/prisma";
+import config from "../../config";
 import AppError from "../../errors/AppError";
 import { createBkashPayment, executeBkashPayment } from "../../lib/bkash";
 
@@ -19,8 +20,13 @@ const initiatePayment = async (invoiceId: string, citizenId: string) => {
     throw new AppError(400, "Invoice is already paid or cancelled");
   }
 
-  const payment = await prisma.payment.create({
-    data: {
+  const payment = await prisma.payment.upsert({
+    where: { invoiceId },
+    update: {
+      amount: invoice.amount,
+      status: "INITIATED",
+    },
+    create: {
       invoiceId,
       amount: invoice.amount,
       provider: "BKASH",
@@ -37,7 +43,10 @@ const initiatePayment = async (invoiceId: string, citizenId: string) => {
     },
   });
 
-  return bkashResponse;
+  return {
+    paymentID: bkashResponse.paymentID,
+    bkashURL: bkashResponse.bkashURL,
+  };
 };
 
 const verifyPayment = async (paymentId: string, citizenId: string, ipAddress?: string) => {
@@ -103,7 +112,69 @@ const verifyPayment = async (paymentId: string, citizenId: string, ipAddress?: s
   return result;
 };
 
+const bkashCallback = async (bkashPaymentId: string, status: string, ipAddress?: string) => {
+  const payment = await prisma.payment.findUnique({
+    where: { transactionId: bkashPaymentId },
+    include: { invoice: true },
+  });
+
+  if (!payment) {
+    throw new AppError(404, "Payment record not found");
+  }
+
+  if (status === "cancel" || status === "failure") {
+    await prisma.payment.update({
+      where: { id: payment.id },
+      data: { status: "FAILED" },
+    });
+    return { success: false };
+  }
+
+  if (payment.status === "SUCCESS") {
+    return { success: true };
+  }
+
+  const bkashVerification = await executeBkashPayment(bkashPaymentId);
+
+  if (bkashVerification.statusCode !== "0000" || bkashVerification.transactionStatus !== "Completed") {
+    await prisma.payment.update({
+      where: { id: payment.id },
+      data: { status: "FAILED" },
+    });
+    return { success: false };
+  }
+
+  const transactionId = bkashVerification.trxID;
+
+  await prisma.$transaction(async (tx) => {
+    await tx.payment.update({
+      where: { id: payment.id },
+      data: { status: "SUCCESS", transactionId },
+    });
+
+    await tx.invoice.update({
+      where: { id: payment.invoiceId },
+      data: { status: "PAID" },
+    });
+
+    await tx.auditLog.create({
+      data: {
+        actorId: payment.invoice.citizenId,
+        action: "PAYMENT_SUCCESS",
+        entity: "Invoice",
+        entityId: payment.invoiceId,
+        previousValue: { paymentStatus: "PENDING" },
+        newValue: { paymentStatus: "PAID", transactionId },
+        ipAddress: ipAddress || null,
+      },
+    });
+  });
+
+  return { success: true };
+};
+
 export const PaymentService = {
   initiatePayment,
   verifyPayment,
+  bkashCallback,
 };
