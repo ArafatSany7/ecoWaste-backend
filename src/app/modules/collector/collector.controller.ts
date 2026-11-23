@@ -52,6 +52,17 @@ const getMyJobs = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const departForPickup = catchAsync(async (req: Request, res: Response) => {
+  const result = await CollectorService.departForPickup(String(req.params.id), req.user.userId, req.ip);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Trip started — live tracking is on",
+    data: result,
+  });
+});
+
 const arriveAtLocation = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const collectorId = req.user.userId;
@@ -102,6 +113,7 @@ export const CollectorController = {
   getCollectorById,
   toggleAvailability,
   getMyJobs,
+  departForPickup,
   arriveAtLocation,
   startCollection,
   completeCollection,

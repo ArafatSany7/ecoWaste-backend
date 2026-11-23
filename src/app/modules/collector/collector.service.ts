@@ -114,8 +114,9 @@ const arriveAtLocation = async (requestId: string, collectorId: string, ipAddres
     throw new AppError(403, "You are not authorized to update this request");
   }
 
-  if (request.status !== "SCHEDULED") {
-    throw new AppError(400, "Only SCHEDULED requests can be marked as ARRIVED");
+  // EN_ROUTE is the normal path; SCHEDULED is still allowed for collectors who skip "Start trip".
+  if (request.status !== "SCHEDULED" && request.status !== "EN_ROUTE") {
+    throw new AppError(400, "Only SCHEDULED or EN_ROUTE requests can be marked as ARRIVED");
   }
 
   const result = await prisma.$transaction(async (tx) => {
@@ -132,8 +133,67 @@ const arriveAtLocation = async (requestId: string, collectorId: string, ipAddres
         action: "COLLECTOR_ARRIVED",
         entity: "WasteRequest",
         entityId: requestId,
-        previousValue: { status: "SCHEDULED" },
+        previousValue: { status: request.status },
         newValue: { status: "COLLECTOR_ARRIVED" },
+        ipAddress: ipAddress || null,
+      },
+    });
+
+    return updatedRequest;
+  });
+
+  return result;
+};
+
+/** SCHEDULED -> EN_ROUTE. Starts live tracking; one active trip per collector at a time. */
+const departForPickup = async (requestId: string, collectorId: string, ipAddress?: string) => {
+  const request = await prisma.wasteRequest.findUnique({
+    where: { id: requestId },
+  });
+
+  if (!request || request.isDeleted) {
+    throw new AppError(404, "Waste Request not found");
+  }
+
+  if (request.assignedCollectorId !== collectorId) {
+    throw new AppError(403, "You are not authorized to update this request");
+  }
+
+  if (request.status !== "SCHEDULED") {
+    throw new AppError(400, "Only SCHEDULED requests can be started");
+  }
+
+  const otherTrip = await prisma.wasteRequest.findFirst({
+    where: {
+      assignedCollectorId: collectorId,
+      status: { in: ["EN_ROUTE", "COLLECTOR_ARRIVED"] },
+      id: { not: requestId },
+      isDeleted: false,
+    },
+    select: { id: true },
+  });
+
+  if (otherTrip) {
+    throw new AppError(409, "Finish your current trip before starting another one");
+  }
+
+  const result = await prisma.$transaction(async (tx) => {
+    const updatedRequest = await tx.wasteRequest.update({
+      where: { id: requestId },
+      data: {
+        status: "EN_ROUTE",
+        tripStartedAt: new Date(),
+      },
+    });
+
+    await tx.auditLog.create({
+      data: {
+        actorId: collectorId,
+        action: "COLLECTOR_EN_ROUTE",
+        entity: "WasteRequest",
+        entityId: requestId,
+        previousValue: { status: "SCHEDULED" },
+        newValue: { status: "EN_ROUTE" },
         ipAddress: ipAddress || null,
       },
     });
@@ -244,6 +304,19 @@ const completeCollection = async (requestId: string, collectorId: string, payloa
       }
     });
 
+    // Trip is over: drop the collector's last GPS fix (no location retained after a job).
+    await tx.collectorProfile.update({
+      where: { userId: collectorId },
+      data: {
+        lastLatitude: null,
+        lastLongitude: null,
+        lastHeading: null,
+        lastSpeed: null,
+        lastAccuracy: null,
+        lastLocationAt: null,
+      },
+    });
+
     // 4. Create the AuditLog
     await tx.auditLog.create({
       data: {
@@ -268,6 +341,7 @@ export const CollectorService = {
   getCollectorById,
   toggleAvailability,
   getMyJobs,
+  departForPickup,
   arriveAtLocation,
   startCollection,
   completeCollection,

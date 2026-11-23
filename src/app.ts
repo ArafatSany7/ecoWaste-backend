@@ -2,10 +2,10 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import express, { type Application, type Request, type Response } from "express";
 import helmet from "helmet";
-import rateLimit from "express-rate-limit";
 import router from "./app/routes";
 import config from "./app/config";
 import globalErrorHandler from "./app/middlewares/globalErrorHandler";
+import { generalLimiter } from "./app/middlewares/rateLimiters";
 
 const app: Application = express();
 
@@ -20,14 +20,8 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  limit: 100,
-  standardHeaders: "draft-7",
-  legacyHeaders: false,
-  message: "Too many requests from this IP, please try again later.",
-});
-app.use(limiter);
+// Live-tracking routes are excluded here and use their own limiter (see rateLimiters.ts).
+app.use(generalLimiter);
 
 app.use("/api/v1", router);
 

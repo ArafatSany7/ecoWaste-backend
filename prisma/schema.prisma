@@ -24,6 +24,7 @@ enum RequestStatus {
   CANCELLED
   ASSIGNED
   SCHEDULED
+  EN_ROUTE
   COLLECTOR_ARRIVED
   IN_PROGRESS
   COMPLETED
@@ -87,6 +88,13 @@ model CollectorProfile {
   lastName    String
   phone       String
   isAvailable Boolean      @default(true)
+  // Latest GPS fix while on a trip. Only the newest point is kept (no location history).
+  lastLatitude   Float?
+  lastLongitude  Float?
+  lastHeading    Float?
+  lastSpeed      Float?
+  lastAccuracy   Float?
+  lastLocationAt DateTime?
   zoneId      String
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   serviceZone ServiceZone  @relation(fields: [zoneId], references: [id])
@@ -126,6 +134,9 @@ model WasteRequest {
   zoneId      String
   address     String
   weight      Float?
+  latitude    Float?
+  longitude   Float?
+  tripStartedAt DateTime?
   status      RequestStatus @default(PENDING)
   isDeleted   Boolean       @default(false)
   createdAt   DateTime      @default(now())

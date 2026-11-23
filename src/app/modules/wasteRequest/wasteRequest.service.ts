@@ -2,10 +2,27 @@ import { Prisma } from "@prisma/client";
 import prisma from "../../lib/prisma";
 import AppError from "../../errors/AppError";
 
-const createWasteRequest = async (userId: string, payload: { categoryId: string; zoneId: string; address: string; weight?: number }) => {
+const createWasteRequest = async (
+  userId: string,
+  payload: {
+    categoryId: string;
+    zoneId: string;
+    address: string;
+    weight?: number;
+    latitude?: number;
+    longitude?: number;
+  }
+) => {
+  // Pick fields explicitly: the raw body could otherwise set status, assignedCollectorId, etc.
+  const { categoryId, zoneId, address, weight, latitude, longitude } = payload;
   const result = await prisma.wasteRequest.create({
     data: {
-      ...payload,
+      categoryId,
+      zoneId,
+      address,
+      weight,
+      latitude,
+      longitude,
       citizenId: userId,
     },
     include: {
