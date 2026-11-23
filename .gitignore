@@ -7,3 +7,8 @@ coverage
 
 .vercel
 .env*
+
+# agent tool dirs
+.claude
+.claude/
+.agent

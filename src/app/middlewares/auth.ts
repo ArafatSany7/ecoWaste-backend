@@ -3,6 +3,7 @@ import jwt, { type JwtPayload } from "jsonwebtoken";
 import config from "../config";
 import catchAsync from "../utils/catchAsync";
 import prisma from "../lib/prisma";
+import AppError from "../errors/AppError";
 
 declare global {
   namespace Express {
@@ -16,7 +17,7 @@ const auth = (...requiredRoles: string[]) => {
   return catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      throw new Error("You are not authorized!");
+      throw new AppError(401, "You are not authorized!");
     }
 
     const token = authHeader.split(" ")[1];
@@ -29,15 +30,15 @@ const auth = (...requiredRoles: string[]) => {
     });
 
     if (!user) {
-      throw new Error("User not found!");
+      throw new AppError(401, "User not found!");
     }
 
     if (user.isDeleted || user.status === "BLOCKED") {
-      throw new Error("This user account is blocked or deleted");
+      throw new AppError(403, "This user account is blocked or deleted");
     }
 
     if (requiredRoles.length > 0 && !requiredRoles.includes(role)) {
-      throw new Error("You have no access to this route");
+      throw new AppError(403, "You have no access to this route");
     }
 
     req.user = decoded;
