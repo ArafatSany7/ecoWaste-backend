@@ -17,15 +17,16 @@ const updateAvailabilitySchema = z.object({
   }),
 });
 
-const completeCollectionSchema = z.object({
+const markCollectedSchema = z.object({
   body: z.object({
     actualWeight: z.number({ message: "actualWeight is required" }).positive(),
-    notes: z.string().optional(),
+    notes: z.string().trim().max(500).optional(),
+    photoUrls: z.array(z.url()).min(1, "Add at least one proof photo").max(3, "Up to 3 photos"),
   }),
 });
 
 export const CollectorValidation = {
   createCollectorSchema,
   updateAvailabilitySchema,
-  completeCollectionSchema,
+  markCollectedSchema,
 };

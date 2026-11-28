@@ -14,9 +14,22 @@ router.patch(
 );
 
 router.patch(
+  "/requests/:id/accept",
+  auth("ADMIN"),
+  AdminController.acceptWasteRequest
+);
+
+router.patch(
   "/requests/:id/reject",
   auth("ADMIN"),
+  validateRequest(AdminValidation.rejectWasteRequestSchema),
   AdminController.rejectWasteRequest
+);
+
+router.patch(
+  "/requests/:id/verify",
+  auth("ADMIN"),
+  AdminController.verifyCompletion
 );
 
 router.post(

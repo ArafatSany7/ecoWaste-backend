@@ -23,7 +23,7 @@ const rejectWasteRequest = catchAsync(async (req: Request, res: Response) => {
   const adminId = req.user.userId;
   const ipAddress = req.ip;
 
-  const result = await AdminService.rejectWasteRequest(id, adminId, ipAddress);
+  const result = await AdminService.rejectWasteRequest(String(id), adminId, ipAddress, req.body?.reason);
 
   sendResponse(res, {
     statusCode: 200,
@@ -74,7 +74,31 @@ const scheduleWasteRequest = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const acceptWasteRequest = catchAsync(async (req: Request, res: Response) => {
+  const result = await AdminService.acceptWasteRequest(String(req.params.id), req.user.userId, req.ip);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Request accepted and collector assigned",
+    data: result,
+  });
+});
+
+const verifyCompletion = catchAsync(async (req: Request, res: Response) => {
+  const result = await AdminService.verifyCompletion(String(req.params.id), req.user.userId, req.ip);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Pickup verified and invoice created",
+    data: result,
+  });
+});
+
 export const AdminController = {
+  acceptWasteRequest,
+  verifyCompletion,
   approveWasteRequest,
   rejectWasteRequest,
   createCollector,
