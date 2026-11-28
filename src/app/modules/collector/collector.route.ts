@@ -51,10 +51,10 @@ router.patch(
 );
 
 router.post(
-  "/requests/:id/complete",
+  "/requests/:id/collected",
   auth("COLLECTOR"),
-  validateRequest(CollectorValidation.completeCollectionSchema),
-  CollectorController.completeCollection
+  validateRequest(CollectorValidation.markCollectedSchema),
+  CollectorController.markCollected
 );
 
 export const CollectorRoutes = router;

@@ -10,6 +10,8 @@ import { PaymentRoutes } from "../modules/payment/payment.route";
 import { FeedbackRoutes } from "../modules/feedback/feedback.route";
 import { AuditLogRoutes } from "../modules/auditLog/auditLog.route";
 import { AnalyticsRoutes } from "../modules/analytics/analytics.route";
+import { NotificationRoutes } from "../modules/notification/notification.route";
+import { UploadRoutes } from "../modules/upload/upload.route";
 
 const router = express.Router();
 
@@ -57,6 +59,14 @@ const moduleRoutes = [
   {
     path: "/analytics",
     route: AnalyticsRoutes,
+  },
+  {
+    path: "/notifications",
+    route: NotificationRoutes,
+  },
+  {
+    path: "/uploads",
+    route: UploadRoutes,
   },
 ];
 

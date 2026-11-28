@@ -1,5 +1,7 @@
 import prisma from "../../lib/prisma";
 import AppError from "../../errors/AppError";
+import { NotificationService } from "../notification/notification.service";
+import { UploadService } from "../upload/upload.service";
 
 const getAllCollectors = async () => {
   const result = await prisma.collectorProfile.findMany({
@@ -114,9 +116,8 @@ const arriveAtLocation = async (requestId: string, collectorId: string, ipAddres
     throw new AppError(403, "You are not authorized to update this request");
   }
 
-  // EN_ROUTE is the normal path; SCHEDULED is still allowed for collectors who skip "Start trip".
-  if (request.status !== "SCHEDULED" && request.status !== "EN_ROUTE") {
-    throw new AppError(400, "Only SCHEDULED or EN_ROUTE requests can be marked as ARRIVED");
+  if (!["ASSIGNED", "SCHEDULED", "EN_ROUTE"].includes(request.status)) {
+    throw new AppError(400, "Only ASSIGNED, SCHEDULED or EN_ROUTE requests can be marked as ARRIVED");
   }
 
   const result = await prisma.$transaction(async (tx) => {
@@ -139,13 +140,18 @@ const arriveAtLocation = async (requestId: string, collectorId: string, ipAddres
       },
     });
 
+    await NotificationService.notify(tx, [request.citizenId], {
+      title: "Collector has arrived",
+      body: "Please have your waste ready at the pickup point.",
+      link: `/dashboard/requests/${requestId}/track`,
+    });
+
     return updatedRequest;
   });
 
   return result;
 };
 
-/** SCHEDULED -> EN_ROUTE. Starts live tracking; one active trip per collector at a time. */
 const departForPickup = async (requestId: string, collectorId: string, ipAddress?: string) => {
   const request = await prisma.wasteRequest.findUnique({
     where: { id: requestId },
@@ -159,8 +165,8 @@ const departForPickup = async (requestId: string, collectorId: string, ipAddress
     throw new AppError(403, "You are not authorized to update this request");
   }
 
-  if (request.status !== "SCHEDULED") {
-    throw new AppError(400, "Only SCHEDULED requests can be started");
+  if (request.status !== "ASSIGNED" && request.status !== "SCHEDULED") {
+    throw new AppError(400, "Only ASSIGNED or SCHEDULED requests can be started");
   }
 
   const otherTrip = await prisma.wasteRequest.findFirst({
@@ -192,10 +198,16 @@ const departForPickup = async (requestId: string, collectorId: string, ipAddress
         action: "COLLECTOR_EN_ROUTE",
         entity: "WasteRequest",
         entityId: requestId,
-        previousValue: { status: "SCHEDULED" },
+        previousValue: { status: request.status },
         newValue: { status: "EN_ROUTE" },
         ipAddress: ipAddress || null,
       },
+    });
+
+    await NotificationService.notify(tx, [request.citizenId], {
+      title: "Collector is on the way",
+      body: "Track the truck live on the map.",
+      link: `/dashboard/requests/${requestId}/track`,
     });
 
     return updatedRequest;
@@ -247,17 +259,24 @@ const startCollection = async (requestId: string, collectorId: string, ipAddress
   return result;
 };
 
-const completeCollection = async (requestId: string, collectorId: string, payload: { actualWeight: number; notes?: string }, ipAddress?: string) => {
+const markCollected = async (
+  requestId: string,
+  collectorId: string,
+  payload: { actualWeight: number; notes?: string; photoUrls: string[] },
+  ipAddress?: string,
+) => {
   const { actualWeight, notes } = payload;
+  const photoUrls = [...new Set(payload.photoUrls)];
+
+  if (photoUrls.some((url) => !UploadService.isProofPhotoUrl(url))) {
+    throw new AppError(400, "Proof photos must be uploaded through the app");
+  }
 
   const request = await prisma.wasteRequest.findUnique({
     where: { id: requestId },
-    include: {
-      category: true,
-    }
   });
 
-  if (!request) {
+  if (!request || request.isDeleted) {
     throw new AppError(404, "Waste Request not found");
   }
 
@@ -266,45 +285,24 @@ const completeCollection = async (requestId: string, collectorId: string, payloa
   }
 
   if (request.status !== "IN_PROGRESS") {
-    throw new AppError(400, "Only IN_PROGRESS requests can be completed");
+    throw new AppError(400, "Only IN_PROGRESS requests can be marked as collected");
   }
 
   const result = await prisma.$transaction(async (tx) => {
-    // 1. Update the WasteRequest
     const updatedRequest = await tx.wasteRequest.update({
       where: { id: requestId },
       data: {
-        status: "COMPLETED",
-        weight: actualWeight, // Update the weight on the request itself based on actual measurement
+        status: "COLLECTED",
+        weight: actualWeight,
       },
     });
 
-    // 2. Create the ServiceReport
-    const serviceReport = await tx.serviceReport.create({
-      data: {
-        requestId,
-        actualWeight,
-        notes,
-      },
+    const serviceReport = await tx.serviceReport.upsert({
+      where: { requestId },
+      create: { requestId, actualWeight, notes, photoUrls },
+      update: { actualWeight, notes, photoUrls },
     });
 
-    // 3. Generate the Invoice
-    // Fallback to 100 if baseFee doesn't exist on the category schema yet
-    const baseFee = (request.category as any).baseFee || 100;
-    const invoiceAmount = baseFee * actualWeight;
-    const dueDate = new Date();
-    dueDate.setDate(dueDate.getDate() + 7); // Due in 7 days
-
-    const invoice = await tx.invoice.create({
-      data: {
-        requestId,
-        citizenId: request.citizenId,
-        amount: invoiceAmount,
-        dueDate,
-      }
-    });
-
-    // Trip is over: drop the collector's last GPS fix (no location retained after a job).
     await tx.collectorProfile.update({
       where: { userId: collectorId },
       data: {
@@ -317,20 +315,31 @@ const completeCollection = async (requestId: string, collectorId: string, payloa
       },
     });
 
-    // 4. Create the AuditLog
     await tx.auditLog.create({
       data: {
         actorId: collectorId,
-        action: "COMPLETE_COLLECTION",
+        action: "MARK_COLLECTED",
         entity: "WasteRequest",
         entityId: requestId,
         previousValue: { status: "IN_PROGRESS" },
-        newValue: { status: "COMPLETED", serviceReportId: serviceReport.id, invoiceId: invoice.id },
+        newValue: { status: "COLLECTED", serviceReportId: serviceReport.id, photos: photoUrls.length },
         ipAddress: ipAddress || null,
       },
     });
 
-    return { request: updatedRequest, serviceReport, invoice };
+    await NotificationService.notify(tx, [request.citizenId], {
+      title: "Waste collected",
+      body: "Your pickup is done and awaiting a final check. Your invoice follows shortly.",
+      link: `/dashboard/requests/${requestId}/track`,
+    });
+
+    await NotificationService.notifyAdmins(tx, {
+      title: "Proof submitted",
+      body: `Collection at ${request.address} is ready to verify.`,
+      link: "/dashboard/admin/requests",
+    });
+
+    return { request: updatedRequest, serviceReport };
   });
 
   return result;
@@ -344,5 +353,5 @@ export const CollectorService = {
   departForPickup,
   arriveAtLocation,
   startCollection,
-  completeCollection,
+  markCollected,
 };

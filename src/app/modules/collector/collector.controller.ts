@@ -93,17 +93,17 @@ const startCollection = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const completeCollection = catchAsync(async (req: Request, res: Response) => {
+const markCollected = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const collectorId = req.user.userId;
   const ipAddress = req.ip;
 
-  const result = await CollectorService.completeCollection(id, collectorId, req.body, ipAddress);
+  const result = await CollectorService.markCollected(String(id), collectorId, req.body, ipAddress);
 
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    message: "Collection completed and Service Report generated successfully",
+    message: "Marked as collected. Waiting for admin verification.",
     data: result,
   });
 });
@@ -116,5 +116,5 @@ export const CollectorController = {
   departForPickup,
   arriveAtLocation,
   startCollection,
-  completeCollection,
+  markCollected,
 };

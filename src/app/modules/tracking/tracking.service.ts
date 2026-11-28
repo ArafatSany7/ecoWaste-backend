@@ -131,6 +131,7 @@ const getRequestTracking = async (
 		requestId: request.id,
 		status: request.status,
 		address: request.address,
+		rejectionReason: request.rejectionReason,
 		destination,
 		tripStartedAt: request.tripStartedAt,
 		schedule: request.collectionSchedule

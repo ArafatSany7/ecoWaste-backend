@@ -62,6 +62,7 @@ model User {
   invoices         Invoice[]
 
   feedbacks         Feedback[]
+  notifications     Notification[]
 
   @@index([role])
   @@index([email])
@@ -137,6 +138,7 @@ model WasteRequest {
   latitude    Float?
   longitude   Float?
   tripStartedAt DateTime?
+  rejectionReason String?
   status      RequestStatus @default(PENDING)
   isDeleted   Boolean       @default(false)
   createdAt   DateTime      @default(now())
@@ -198,6 +200,7 @@ model ServiceReport {
   requestId     String       @unique
   actualWeight  Float
   notes         String?
+  photoUrls     String[]     @default([])
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
 
@@ -254,4 +257,19 @@ model Feedback {
   request     WasteRequest @relation(fields: [requestId], references: [id])
 
   @@map("feedbacks")
+}
+
+model Notification {
+  id        String    @id @default(uuid())
+  userId    String
+  title     String
+  body      String
+  link      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("notifications")
 }

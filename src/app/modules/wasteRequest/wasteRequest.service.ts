@@ -93,6 +93,8 @@ const getAllWasteRequests = async (query: Record<string, unknown>) => {
       citizen: true,
       category: true,
       zone: true,
+      assignedCollector: true,
+      serviceReport: true,
     }
   });
 

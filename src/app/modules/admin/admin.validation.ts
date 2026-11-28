@@ -13,7 +13,14 @@ const scheduleWasteRequestSchema = z.object({
   }),
 });
 
+const rejectWasteRequestSchema = z.object({
+  body: z.object({
+    reason: z.string({ message: "A reason is required" }).trim().min(3, "Reason must be at least 3 characters").max(300),
+  }),
+});
+
 export const AdminValidation = {
+  rejectWasteRequestSchema,
   assignCollectorSchema,
   scheduleWasteRequestSchema,
 };

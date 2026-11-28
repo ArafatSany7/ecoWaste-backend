@@ -6,7 +6,7 @@ import rateLimit from "express-rate-limit";
  * the general API limiter.
  */
 export const TRACKING_PATH =
-	/^\/api\/v1\/(collectors\/me\/location|waste-requests\/[^/]+\/tracking)\/?$/;
+	/^\/api\/v1\/(collectors\/me\/location|waste-requests\/[^/]+\/tracking|notifications)\/?$/;
 
 export const generalLimiter = rateLimit({
 	windowMs: 15 * 60 * 1000,
